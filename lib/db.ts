@@ -34,4 +34,19 @@ const poolPromise = new sql.ConnectionPool(config)
     throw err;
   });
 
+export async function SqlExec(command: string) {
+  try {
+    console.log(command)
+    const pool = await poolPromise;
+    const result=await pool
+    .request()
+    .query(command);
+    console.log(result);
+    return result.recordset; // ✅ Return the recordset directly
+  } catch (error) {
+    console.error('❌ SQL Execution Error', error);
+    return error;
+  }
+}
+
 export default poolPromise; // ✅ default export
