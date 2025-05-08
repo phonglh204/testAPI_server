@@ -34,7 +34,7 @@ const poolPromise = new sql.ConnectionPool(config)
     throw err;
   });
 
-export async function SqlExec(command: string) {
+export async function SqlExec(command: string): Promise<any[]> {
   try {
     console.log(command)
     const pool = await poolPromise;
@@ -45,7 +45,26 @@ export async function SqlExec(command: string) {
     return result.recordset; // ✅ Return the recordset directly
   } catch (error) {
     console.error('❌ SQL Execution Error', error);
-    return error;
+    return []; // Return an empty array as a fallback
+  }
+}
+export async function GetParaOfStore(storename: string): Promise<any[]> {
+  try {
+    let command=`SELECT prm.name AS ParamName, typ.name AS SqlType, prm.max_length, prm.parameter_id`
+    command+=` FROM sys.parameters prm`
+    command+=` JOIN sys.procedures sp ON prm.object_id = sp.object_id`
+    command+=` JOIN sys.types typ ON prm.user_type_id = typ.user_type_id`
+    command+=` WHERE sp.name = @storename`
+    command+=` ORDER BY prm.parameter_id;`
+    const pool = await poolPromise;
+    const result=await pool
+    .request()
+    .input('storename', sql.VarChar, storename) // Use input parameter for security
+    .query(command);
+    return result.recordset; // ✅ Return the recordset directly
+  } catch (error) {
+    console.error('❌ SQL Execution Error', error);
+    return [];
   }
 }
 
